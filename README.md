@@ -10,35 +10,36 @@ Demo for [satrn](https://github.com/open-mmlab/mmocr/blob/main/configs/textrecog
 
 
 ### 导出模型(PyTorch -> ONNX)
-导出前准备
-修改[L232-L234](https://github.com/open-mmlab/mmocr/blob/main/mmocr/models/textrecog/decoders/nrtr_decoder.py#L232)
+1. 导出前准备
 
-```
-        # valid_ratios = []
-        # for data_sample in data_samples:
-        #     valid_ratios.append(data_sample.get('valid_ratio'))
+    修改nrtr_decoder.py中的[L232-L234](https://github.com/open-mmlab/mmocr/blob/main/mmocr/models/textrecog/decoders/nrtr_decoder.py#L232)
 
-        valid_ratios = [1.0 for _ in range(out_enc.size(0))]
-        if data_samples is not None:
-            valid_ratios = []
-            for data_sample in data_samples:
-                valid_ratios.append(data_sample.get('valid_ratio'))
-```
+    ```
+            # valid_ratios = []
+            # for data_sample in data_samples:
+            #     valid_ratios.append(data_sample.get('valid_ratio'))
+
+            valid_ratios = [1.0 for _ in range(out_enc.size(0))]
+            if data_samples is not None:
+                valid_ratios = []
+                for data_sample in data_samples:
+                    valid_ratios.append(data_sample.get('valid_ratio'))
+    ```
 
 
-模型导出
-```
-python export_onnx.py
-```
-导出成功后会生成两个onnx模型:
-- backbone and image encoder: satrn_backbone_encoder.onnx
-- encoder: satrn_decoder.onnx
+2. 模型导出
+    ```
+    python export_onnx.py
+    ```
+    导出成功后会生成两个onnx模型:
+    - backbone and image encoder: satrn_backbone_encoder.onnx
+    - encoder: satrn_decoder.onnx
 
-Simplify ONNX：需要对decoder进行Simplify
-```
-pip install onnx-simplifier
-python -m onnxsim onnx/satrn_decoder.onnx onnx/satrn_decoder_sim.onnx
-```
+3. Simplify ONNX：需要对decoder进行Simplify
+    ```
+    pip install onnx-simplifier
+    python -m onnxsim onnx/satrn_decoder.onnx onnx/satrn_decoder_sim.onnx
+    ```
 
 
 #### 转换模型(ONNX -> Axera)
@@ -64,8 +65,7 @@ python -m onnxsim onnx/satrn_decoder.onnx onnx/satrn_decoder_sim.onnx
 \- cali_data/decoder_data
 
 #### 模型编译
-修改配置文件
-检查config.json 中 calibration_dataset 字段，将该字段配置的路径改为上一步准备的量化数据集存放路径
+修改配置文件: 检查config.json 中 calibration_dataset 字段，将该字段配置的路径改为上一步准备的量化数据集存放路径
 
 此处两个模型精度均配置为U16
 
@@ -92,7 +92,10 @@ pulsar2 build --config build_config/satrn_decoder.json --input onnx/satrn_decode
 
 
 #### onnx运行demo
+
+```
 python run_onnx.py
+```
 
 输入图像
 
@@ -106,8 +109,9 @@ score: [0.9384030103683472, 0.9574987292289734, 0.9993689656257629, 0.9994958639
 ```
 
 #### axmodel(待验证)
+```
 python run_axmodel.py
-
+```
 
 输出内容
 ```shell
