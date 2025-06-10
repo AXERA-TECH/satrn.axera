@@ -13,6 +13,7 @@ Demo for [satrn](https://github.com/open-mmlab/mmocr/blob/main/configs/textrecog
 1. 导出前准备
 
     修改nrtr_decoder.py中的[L232-L234](https://github.com/open-mmlab/mmocr/blob/main/mmocr/models/textrecog/decoders/nrtr_decoder.py#L232)
+    固定动态参数valid_ratios=1
 
     ```
             # valid_ratios = []
