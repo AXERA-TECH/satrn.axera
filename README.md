@@ -109,7 +109,10 @@ pred_text: STAR
 score: [0.9384030103683472, 0.9574987292289734, 0.9993689656257629, 0.9994958639144897]
 ```
 
-#### axmodel
+#### axmodel板上运行
+
+需基于[PyAXEngine](https://github.com/AXERA-TECH/pyaxengine)在AX650N上进行部署
+
 将上一步生成的input_tensor、onboard_run_axmodel.py以及两个编译好的axmodel复制到板上
 ```
 .
