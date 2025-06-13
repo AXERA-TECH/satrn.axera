@@ -44,7 +44,7 @@
     "precision_analysis": true,
     "precision_analysis_method": "EndToEnd",
     "precision_analysis_mode": "Reference",
-    "device":"cuda:0"
+    "device":"cpu"
   },
   "input_processors": [
     {

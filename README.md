@@ -92,7 +92,7 @@ pulsar2 build --config build_config/satrn_decoder.json --input onnx/satrn_decode
 ### Python API 运行
 
 
-#### onnx运行demo
+#### onnx运行demo,验证onnx正确的同时，保存模型输入tensor
 
 ```
 python run_onnx.py
@@ -109,15 +109,30 @@ pred_text: STAR
 score: [0.9384030103683472, 0.9574987292289734, 0.9993689656257629, 0.9994958639144897]
 ```
 
-#### axmodel(待验证)
+#### axmodel
+将上一步生成的input_tensor、onboard_run_axmodel.py以及两个编译好的axmodel复制到板上
 ```
-python run_axmodel.py
+.
+|-- backbone_encoder.axmodel
+|-- decoder.axmodel
+|-- demo_text_recog.jpg
+|-- input_tensor
+|-- onboard_run_axmodel.py
+`-- output_tensor
+
 ```
 
-输出内容
+运行命令
+
+```
+python onboard_run_axmodel.py
+```
+
+将得到的output_tensor复制回本地后，运行output_postprocessor.py，得到输出结果
+
 ```shell
 pred_text: STAR
-score: [0.9384030103683472, 0.9574987292289734, 0.9993689656257629, 0.9994958639144897]
+score: [0.964023768901825, 0.9951103329658508, 0.9916244149208069, 0.9988182187080383]
 ```
 
 

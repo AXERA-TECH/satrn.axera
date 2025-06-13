@@ -1,3 +1,7 @@
 cali_data/decoder_data/*
 onnx/*
 build_output/*
+onboard_run_onnx.py
+input_tensor/*
+output_tensor/*
+*.zip

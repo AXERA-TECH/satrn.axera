@@ -6,22 +6,6 @@ import torch.nn as nn
 import onnxruntime as ort
 import numpy as np
 
-onnx_bb_encoder = ort.InferenceSession("onnx/satrn_backbone_encoder.onnx")
-onnx_decoder = ort.InferenceSession("onnx/satrn_decoder_sim.onnx")
-
-
-class BackboneEncoderOnly(nn.Module):
-    def __init__(self, original_model):
-        super().__init__()
-        # 保留 backbone 和 encoder
-        self.backbone = original_model.backbone
-        self.encoder = original_model.encoder
-        
-    def forward(self, x):
-        x = self.backbone(x)
-        return self.encoder(x)
-
-
 class DecoderOnly(nn.Module):
     def __init__(self, original_model):
         super().__init__()
@@ -63,8 +47,6 @@ class DecoderOnly(nn.Module):
         step_result = self.classifier(output[:, step, :])
         return step_result
 
-
-
 def normalize_tensor(tensor: torch.Tensor) -> torch.Tensor:
     """
     对 uint8 张量进行标准化处理
@@ -89,7 +71,6 @@ def normalize_tensor(tensor: torch.Tensor) -> torch.Tensor:
     
     return normalized_tensor
 
-
 infer = MMOCRInferencer(rec='satrn')
 model = infer.textrec_inferencer.model
 model.eval()
@@ -103,55 +84,15 @@ for ori_inputs in track(chunked_inputs, description='Inference'):
     input_img = input['inputs']
     input_image = normalize_tensor(input_img).unsqueeze(0)
     input_sample = input['data_samples']
-    
-    # backbone+encoder
-    model_backbone_encoder = BackboneEncoderOnly(model)
-    model_decoder = DecoderOnly(model)
-    
-    np.save('input_tensor/input_image.npy',input_image)
-    # out_enc = model_backbone_encoder(input_image)
-    out_enc = onnx_bb_encoder.run(None, {"input": np.array(input_image.cpu())})[0]
-    out_enc = torch.tensor(out_enc)
-    data_samples = None
-    
-    N = out_enc.size(0)
-    init_target_seq = torch.full((N, model_decoder.max_seq_len + 1),
-                                model_decoder.padding_idx,
-                                device=out_enc.device,
-                                dtype=torch.long)
-# bsz * seq_len
-    init_target_seq[:, 0] = model_decoder.start_idx
 
-    np.save('input_tensor/init_target_seq.npy',init_target_seq)
-    
-    outputs = []
-    for step in range(0, model_decoder.max_seq_len):
-        valid_ratios = [1.0 for _ in range(out_enc.size(0))]
-        if data_samples is not None:
-            valid_ratios = []
-            for data_sample in data_samples:
-                valid_ratios.append(data_sample.get('valid_ratio'))
-        
-        src_mask = model_decoder._get_source_mask(out_enc, valid_ratios)
-        # step_result = model_decoder(init_target_seq,out_enc,src_mask,step)
-        step_result = onnx_decoder.run(None,{'init_target_seq':np.array(init_target_seq),
-                                             'out_enc':np.array(out_enc),
-                                             'src_mask':np.array(src_mask),
-                                             'step':np.array([step])})[0][0]
-        step_result = torch.tensor(step_result)
-        outputs.append(step_result)
-        _, step_max_index = torch.max(step_result, dim=-1)
-        init_target_seq[:, step + 1] = step_max_index
-    outputs = torch.stack(outputs, dim=1)
+
+    model_decoder = DecoderOnly(model)
+
+    outputs = torch.tensor(np.load('output_tensor/outputs.npy'))
     out_dec = model_decoder.softmax(outputs)
     output = model_decoder.postprocessor(out_dec, [input_sample])
     outstr = output[0].pred_text.item
     outscore = output[0].pred_text.score
-    
+
     print('pred_text:',outstr)
     print('score:',outscore)
-    
-    
-    
-    
-    
